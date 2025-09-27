@@ -2,7 +2,7 @@
 #include <SD.h>
 
 BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *filepath, size_t buffer_size) 
-    :_spi(spi_bus), _CS_pin(CS)
+    :_spi(spi_bus), _CS_pin(CS), _buffer_size(buffer_size), _last_flush_time(millis())
 {
     // add the () behind to zero-initialize the buffer
     _write_buffer = new uint8_t[buffer_size]();
@@ -15,7 +15,6 @@ BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *filepath, size
 }
 
 BufferedSD::~BufferedSD() {
-    if (_file) _file.close();
     delete[] _write_buffer;
 }
 
@@ -27,42 +26,44 @@ bool BufferedSD::begin() {
         else if (i == NUM_TRIES_TO_OPEN - 1) {
             return false;
         }
+        delay(100);
     }
     
-    _file = SD.open(_filepath, FILE_WRITE);
-    if (!_file) {
+    File f = SD.open(_filepath, FILE_WRITE);
+    if (!f) {
         Serial.print("Failed to create file: ");
         Serial.println(_filepath);
         return false;
     }
-    _file.close();
-    
-    // leave the file open in append mode so we dont have to open and close the file everytime
-    _file = SD.open(_filepath, FILE_APPEND);
+    f.close();
 
     return true;
 }
 
 int BufferedSD::write(const char *data) {
-    if (!_file) {
-        return 0;
+    size_t length = strlen(data);
+    // if the data can be buffered, throw it into the buffer first
+    if (_buffer_idx + length >= _buffer_size) {
+        flush_buffer();
+        _buffer_idx = 0;
     }
-    int bytes_written = _file.println(data);
-    return bytes_written;
+
+    memcpy(_write_buffer + _buffer_idx, data, length);
+    _buffer_idx += length;
+    
+    return length;
 }
 
 void BufferedSD::print_contents() {
-    _file.close();
-    _file = SD.open(_filepath, FILE_READ);
-    if (!_file) {
+    File f = SD.open(_filepath, FILE_READ);
+    if (!f) {
         Serial.print("The file cannot be opened");
         return;
     }
 
-    while (_file.available()) {
-        Serial.write(_file.read());
+    while (f.available()) {
+        Serial.print((char)f.read());
     }
 
-    _file.close();
-    _file = SD.open(_filepath, FILE_APPEND);
+    f.close();
 }
