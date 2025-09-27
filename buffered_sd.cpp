@@ -15,6 +15,7 @@ BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *filepath, size
 }
 
 BufferedSD::~BufferedSD() {
+    flush_buffer();
     delete[] _write_buffer;
 }
 
