@@ -1,0 +1,23 @@
+{
+  "name": "Buffered SD",
+  "keywords": "SD Card",
+  "description": "Arduino library (SPI) for improving write speeds to SD card",
+  "authors":
+  [
+    {
+      "name": "SleepyWoodpecker",
+      "email": "shawnweichew@gmail.com",
+      "maintainer": true
+    }
+  ],
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/UCLA-Rocket-Project/Buffered-SD-Card"
+  },
+  "version": "0.0.1",
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": "buffered_sd.h"
+}
