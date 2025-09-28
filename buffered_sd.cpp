@@ -1,17 +1,15 @@
 #include <buffered_sd.h>
 #include <SD.h>
 
-BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *filepath, size_t buffer_size) 
-    :_spi(spi_bus), _CS_pin(CS), _buffer_size(buffer_size), _last_flush_time(millis())
+BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *base_filepath, const char *extension, size_t buffer_size) 
+    :_spi(spi_bus), _CS_pin(CS), _buffer_size(buffer_size)
 {
     // add the () behind to zero-initialize the buffer
     _write_buffer = new uint8_t[buffer_size]();
     configASSERT(_write_buffer && "Failed to initialize write buffer");
     _buffer_idx = 0;
 
-    strncpy(_filepath, filepath, FILEPATH_NAME_MAX_LENGTH);
-    // just in case the file path name overflows
-    _filepath[FILEPATH_NAME_MAX_LENGTH - 1] = '\0';
+    find_first_available_file(base_filepath, _filepath, extension);
 }
 
 BufferedSD::~BufferedSD() {
@@ -46,13 +44,24 @@ int BufferedSD::write(const char *data) {
     // if the data can be buffered, throw it into the buffer first
     if (_buffer_idx + length >= _buffer_size) {
         flush_buffer();
-        _buffer_idx = 0;
     }
 
     memcpy(_write_buffer + _buffer_idx, data, length);
     _buffer_idx += length;
     
     return length;
+}
+
+int BufferedSD::write_immediate(const char *data) {
+    flush_buffer();
+
+    size_t length = strlen(data);
+
+    File f = SD.open(_filepath, FILE_APPEND);
+    for (int i = 0; i < length; ++i) {
+        f.print(static_cast<char>(data[i]));
+    }
+    f.close();
 }
 
 void BufferedSD::print_contents() {
@@ -67,4 +76,27 @@ void BufferedSD::print_contents() {
     }
 
     f.close();
+}
+
+void BufferedSD::find_first_available_file(const char *planned_filepath, char *final_filepath, const char *extension) {
+    char temp_filepath[FILEPATH_NAME_MAX_LENGTH];
+
+    while (true) {
+        // FAT32 (file format used by XTSD has a limit of 256 files per directory)
+        for (int i = 0; i < 256; ++i) {
+            snprintf(
+                temp_filepath, 
+                FILEPATH_NAME_MAX_LENGTH, 
+                "/%s-%d%s", 
+                planned_filepath, i, extension
+            );
+
+            if (!SD.exists(temp_filepath)) {
+                strncpy(final_filepath, temp_filepath, FILEPATH_NAME_MAX_LENGTH);
+                // null terminate the resulting string just in case
+                final_filepath[FILEPATH_NAME_MAX_LENGTH - 1] = '\0';
+                return;
+            }
+        }
+    }
 }

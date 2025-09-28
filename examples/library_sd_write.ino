@@ -13,7 +13,7 @@ const char str[] = "This is a sample C-style string that is designed to be appro
 const int num_writes = 1000;
 
 void test_library_sd() {
-  BufferedSD sd(vspi_bus, CS_XTSD, "/hi.txt");
+  BufferedSD sd(vspi_bus, CS_XTSD, "hi", ".txt");
 
   // Initialize SPI bus manually
   bool sd_init = sd.begin();

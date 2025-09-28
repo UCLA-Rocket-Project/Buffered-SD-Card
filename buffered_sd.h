@@ -13,12 +13,29 @@
 class BufferedSD 
 {
 public:
-    BufferedSD(SPIClass &spi_bus, uint8_t CS, const char* filepath, size_t buffer_size = DEFAULT_BUFFER_SIZE);
+    /**
+     * @param spi_bus: the custom SPI bus
+     * @param CS: the CS pin
+     * @param base_filepath: the base filepath that will be used to find the next available file to write to
+     * @param extension: the file extension of the log file
+     * @param buffer_size: the size of the write buffer
+    */
+    BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *base_filepath = "", const char *extension = ".txt", size_t buffer_size = DEFAULT_BUFFER_SIZE);
     ~BufferedSD();
 
     bool begin();
     int write(const char *data);
+    int write_immediate(const char *data);
     void print_contents();
+
+    /**
+     * @brief: find the first available file name, which is achieved by adding a number to the end of the current file name
+     * 
+     * @param planned_filepath: the start filepath to search from
+     * @param final_filepath: the first file name that is found
+     * @param extension: the file extension
+     */
+    void find_first_available_file(const char *planned_filepath, char *final_filepath, const char *extension);
     
     inline bool has_buffered_data();
     inline void flush_buffer();
@@ -28,8 +45,6 @@ private:
     size_t _buffer_idx;
     size_t _buffer_size;
     char _filepath[FILEPATH_NAME_MAX_LENGTH];
-
-    unsigned long _last_flush_time;
     
     SPIClass _spi;
     uint8_t _CS_pin;
@@ -46,7 +61,7 @@ inline void BufferedSD::flush_buffer() {
         f.print(static_cast<char>(_write_buffer[i]));
     }
     f.close();
-    _last_flush_time = millis();
+    _buffer_idx = 0;
 }
 
 #endif // BUFFERED_SD_H_
