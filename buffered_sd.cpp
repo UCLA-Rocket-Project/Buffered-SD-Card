@@ -58,10 +58,13 @@ int BufferedSD::write_immediate(const char *data) {
     size_t length = strlen(data);
 
     File f = SD.open(_filepath, FILE_APPEND);
+    size_t written_length = 0;
     for (int i = 0; i < length; ++i) {
-        f.print(static_cast<char>(data[i]));
+        written_length += f.print(static_cast<char>(data[i]));
     }
     f.close();
+
+    return written_length;
 }
 
 void BufferedSD::print_contents() {
