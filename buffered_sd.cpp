@@ -2,14 +2,12 @@
 #include <SD.h>
 
 BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *base_filepath, const char *extension, size_t buffer_size) 
-    :_spi(&spi_bus), _CS_pin(CS), _buffer_size(buffer_size)
+    :_spi(&spi_bus), _CS_pin(CS), _buffer_size(buffer_size), _base_path(base_filepath), _extension(extension)
 {
     // add the () behind to zero-initialize the buffer
     _write_buffer = new uint8_t[buffer_size]();
     configASSERT(_write_buffer && "Failed to initialize write buffer");
     _buffer_idx = 0;
-
-    find_first_available_file(base_filepath, _filepath, extension);
 }
 
 BufferedSD::~BufferedSD() {
@@ -27,6 +25,8 @@ bool BufferedSD::begin() {
         }
         delay(100);
     }
+
+    find_first_available_file(_base_path, _filepath, _extension);
     
     File f = SD.open(_filepath, FILE_WRITE);
     if (!f) {

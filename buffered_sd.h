@@ -45,6 +45,8 @@ private:
     size_t _buffer_idx;
     size_t _buffer_size;
     char _filepath[FILEPATH_NAME_MAX_LENGTH];
+    const char *_base_path;
+    const char *_extension;
     
     SPIClass *_spi;
     uint8_t _CS_pin;
