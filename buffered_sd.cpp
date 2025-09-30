@@ -2,7 +2,7 @@
 #include <SD.h>
 
 BufferedSD::BufferedSD(SPIClass &spi_bus, uint8_t CS, const char *base_filepath, const char *extension, size_t buffer_size) 
-    :_spi(spi_bus), _CS_pin(CS), _buffer_size(buffer_size)
+    :_spi(&spi_bus), _CS_pin(CS), _buffer_size(buffer_size)
 {
     // add the () behind to zero-initialize the buffer
     _write_buffer = new uint8_t[buffer_size]();
@@ -19,7 +19,7 @@ BufferedSD::~BufferedSD() {
 
 bool BufferedSD::begin() {
     for (int i = 0; i < NUM_TRIES_TO_OPEN; ++i) {
-        if (SD.begin(_CS_pin, _spi)) {
+        if (SD.begin(_CS_pin, *_spi)) {
             break;
         }
         else if (i == NUM_TRIES_TO_OPEN - 1) {
@@ -59,9 +59,7 @@ int BufferedSD::write_immediate(const char *data) {
 
     File f = SD.open(_filepath, FILE_APPEND);
     size_t written_length = 0;
-    for (int i = 0; i < length; ++i) {
-        written_length += f.print(static_cast<char>(data[i]));
-    }
+    written_length += f.write(reinterpret_cast<const uint8_t *>(data), strlen(data));
     f.close();
 
     return written_length;

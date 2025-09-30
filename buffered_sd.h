@@ -46,7 +46,7 @@ private:
     size_t _buffer_size;
     char _filepath[FILEPATH_NAME_MAX_LENGTH];
     
-    SPIClass _spi;
+    SPIClass *_spi;
     uint8_t _CS_pin;
 };
 
@@ -57,9 +57,11 @@ inline bool BufferedSD::has_buffered_data() {
 
 inline void BufferedSD::flush_buffer() {
     File f = SD.open(_filepath, FILE_APPEND);
-    for (int i = 0; i <= _buffer_idx; ++i) {
-        f.print(static_cast<char>(_write_buffer[i]));
+    if (!f) {
+        Serial.println("Cannot open file for appending");
+        return;
     }
+    size_t written_bytes = f.write(_write_buffer, _buffer_idx);
     f.close();
     _buffer_idx = 0;
 }
