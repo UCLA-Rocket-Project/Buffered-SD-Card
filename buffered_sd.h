@@ -58,11 +58,14 @@ inline bool BufferedSD::has_buffered_data() {
 }
 
 inline void BufferedSD::flush_buffer() {
+    if (_buffer_idx == 0) return;
+
     File f = SD.open(_filepath, FILE_APPEND);
     if (!f) {
         Serial.println("Cannot open file for appending");
         return;
     }
+
     size_t written_bytes = f.write(_write_buffer, _buffer_idx);
     f.close();
     _buffer_idx = 0;

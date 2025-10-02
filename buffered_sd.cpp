@@ -42,7 +42,7 @@ bool BufferedSD::begin() {
 int BufferedSD::write(const char *data) {
     size_t length = strlen(data);
     // if the data can be buffered, throw it into the buffer first
-    if (_buffer_idx + length >= _buffer_size) {
+    if (_buffer_idx + length > _buffer_size) {
         flush_buffer();
     }
 
