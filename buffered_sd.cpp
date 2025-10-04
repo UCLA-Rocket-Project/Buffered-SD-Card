@@ -41,7 +41,6 @@ bool BufferedSD::begin() {
 
 int BufferedSD::write(const char *data) {
     size_t length = strlen(data);
-    Serial.printf("Length of data: %d | New index of buffer: %d\n", length, _buffer_idx + length);
     // if the data can be buffered, throw it into the buffer first
     if (_buffer_idx + length > _buffer_size) {
         Serial.println("Entering here...");
@@ -55,7 +54,6 @@ int BufferedSD::write(const char *data) {
 }
 
 int BufferedSD::write(const char *data, size_t length) {
-    Serial.printf("Length of data: %d | New index of buffer: %d\n", length, _buffer_idx + length);
     // if the data can be buffered, throw it into the buffer first
     if (_buffer_idx + length > _buffer_size) {
         Serial.println("Entering here...");
