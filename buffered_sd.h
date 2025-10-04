@@ -25,7 +25,9 @@ public:
 
     bool begin();
     int write(const char *data);
+    int write(const char *data, size_t length);
     int write_immediate(const char *data);
+    int write_immediate(const char *data, size_t length);
     void print_contents();
 
     /**
