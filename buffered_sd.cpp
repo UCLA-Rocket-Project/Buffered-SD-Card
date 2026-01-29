@@ -104,7 +104,7 @@ void BufferedSD::print_contents() {
     f.close();
 }
 
-void BufferedSD::find_first_available_file(const char *planned_filepath, char *final_filepath, const char *extension) {
+void BufferedSD::find_first_available_file(const char *planned_filepath, const char *extension) {
     char temp_filepath[FILEPATH_NAME_MAX_LENGTH];
 
     while (true) {
@@ -118,11 +118,53 @@ void BufferedSD::find_first_available_file(const char *planned_filepath, char *f
             );
 
             if (!SD.exists(temp_filepath)) {
-                strncpy(final_filepath, temp_filepath, FILEPATH_NAME_MAX_LENGTH);
+                strncpy(_filepath, temp_filepath, FILEPATH_NAME_MAX_LENGTH);
                 // null terminate the resulting string just in case
                 final_filepath[FILEPATH_NAME_MAX_LENGTH - 1] = '\0';
                 return;
             }
         }
+    }
+}
+
+sd_card_update BufferedSD::get_file_update() {
+    File file = SD.open("/foo.txt", "r");
+    if (!file) {
+        return {0, 0};
+    }
+
+    uint32_t file_size = file.size();
+   
+    // skip past the final \n character
+    uint32_t offset = file_size - 3;
+    file.seek(offset, SeekSet);
+    char curr = file.peek();
+
+    // find the second last \n character
+    while (offset > 0 && curr != '\n') {
+        file.seek(offset, SeekSet);
+        offset--;
+        curr = file.peek();
+    }
+
+    // biggest value is 4,294,967,295
+    // go back and read the last timestamp present on the file
+    char number[11];
+    int i = 0;
+    while (file.available()) {
+        number[i] = file.read();
+        if (number[i] == ',') {
+            break;
+        }
+        i++;
+    }
+
+    number[i++] = '\0';
+
+    char *endptr;
+
+    return {
+        file_size,
+        strtoul(number, &endptr, 10);
     }
 }

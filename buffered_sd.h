@@ -30,6 +30,18 @@ public:
     int write_immediate(const char *data, size_t length);
     void print_contents();
 
+    struct sd_card_udpate {
+        uint32_t file_size;
+        uint32_t last_written_timestamp;
+    };
+
+    /**
+     * @brief: function specific to the debugging module on the esp32s
+     * 
+     * @returns: file size + timestamp of last written log entry
+     */
+    sd_card_udpate get_file_update();
+
     /**
      * @brief: find the first available file name, which is achieved by adding a number to the end of the current file name
      * 
