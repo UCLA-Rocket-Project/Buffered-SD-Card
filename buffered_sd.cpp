@@ -26,7 +26,7 @@ bool BufferedSD::begin() {
         delay(100);
     }
 
-    find_first_available_file(_base_path, _filepath, _extension);
+    find_first_available_file(_base_path, _extension);
     
     File f = SD.open(_filepath, FILE_WRITE);
     if (!f) {
@@ -120,7 +120,7 @@ void BufferedSD::find_first_available_file(const char *planned_filepath, const c
             if (!SD.exists(temp_filepath)) {
                 strncpy(_filepath, temp_filepath, FILEPATH_NAME_MAX_LENGTH);
                 // null terminate the resulting string just in case
-                final_filepath[FILEPATH_NAME_MAX_LENGTH - 1] = '\0';
+                _filepath[FILEPATH_NAME_MAX_LENGTH - 1] = '\0';
                 return;
             }
         }
@@ -128,7 +128,7 @@ void BufferedSD::find_first_available_file(const char *planned_filepath, const c
 }
 
 sd_card_update BufferedSD::get_file_update() {
-    File file = SD.open("/foo.txt", "r");
+    File file = SD.open(_filepath, "r");
     if (!file) {
         return {0, 0};
     }
@@ -165,6 +165,10 @@ sd_card_update BufferedSD::get_file_update() {
 
     return {
         file_size,
-        strtoul(number, &endptr, 10);
-    }
+        strtoul(number, &endptr, 10)
+    };
+}
+
+void BufferedSD::get_file_name(char *buf) {
+    strncpy(buf, _filepath, strlen(_filepath) + 1);
 }
