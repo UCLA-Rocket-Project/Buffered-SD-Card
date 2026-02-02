@@ -214,3 +214,7 @@ bool BufferedSD::create_new_file() {
 
     return true;
 }
+
+unsigned long BufferedSD::get_free_space() {
+    return (SD.totalBytes() - SD.usedBytes()) / (1024 * 1024);
+}

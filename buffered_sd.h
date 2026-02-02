@@ -50,6 +50,7 @@ class BufferedSD {
     bool delete_all_files();
     int count_top_level_files();
     bool create_new_file();
+    unsigned long get_free_space();
 
     /**
      * @brief: find the first available file name, which is achieved by adding
