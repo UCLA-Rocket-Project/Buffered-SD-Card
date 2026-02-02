@@ -28,15 +28,7 @@ bool BufferedSD::begin() {
         delay(100);
     }
 
-    find_first_available_file(_base_path, _extension);
-
-    File f = SD.open(_filepath, FILE_WRITE);
-    if (!f) {
-        Serial.print("Failed to create file: ");
-        Serial.println(_filepath);
-        return false;
-    }
-    f.close();
+    create_new_file();
 
     return true;
 }
@@ -209,4 +201,16 @@ int BufferedSD::count_top_level_files() {
     }
 
     return counter;
+}
+
+bool BufferedSD::create_new_file() {
+    find_first_available_file(_base_path, _extension);
+
+    File f = SD.open(_filepath, FILE_WRITE);
+    if (!f) {
+        return false;
+    }
+    f.close();
+
+    return true;
 }
