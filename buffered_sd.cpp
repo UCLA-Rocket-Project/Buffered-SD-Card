@@ -180,7 +180,7 @@ bool BufferedSD::delete_all_files() {
     while (file) {
         char name[FILEPATH_NAME_MAX_LENGTH];
         snprintf(name, FILEPATH_NAME_MAX_LENGTH, "/%s", file.name());
-        deleteFile(SD, name);
+        SD.remove(name);
 
         file = root.openNextFile();
 
