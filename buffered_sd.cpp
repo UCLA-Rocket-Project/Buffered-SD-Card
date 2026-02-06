@@ -33,45 +33,26 @@ bool BufferedSD::begin() {
     return true;
 }
 
-int BufferedSD::write(const char *data) {
-    size_t length = strlen(data);
-    // if the data can be buffered, throw it into the buffer first
-    if (_buffer_idx + length > _buffer_size) {
-        flush_buffer();
-    }
-
-    memcpy(_write_buffer + _buffer_idx, data, length);
-    _buffer_idx += length;
-
-    return length;
-}
+int BufferedSD::write(const char *data) { return write(data, strlen(data)); }
 
 int BufferedSD::write(const char *data, size_t length) {
-    // if the data can be buffered, throw it into the buffer first
+    // Handle data larger than buffer
+    if (length > _buffer_size) {
+        flush_buffer();
+        // Write directly to file for oversized data
+        return write_immediate(data, length);
+    }
+
     if (_buffer_idx + length > _buffer_size) {
         flush_buffer();
     }
 
     memcpy(_write_buffer + _buffer_idx, data, length);
     _buffer_idx += length;
-
     return length;
 }
 
-int BufferedSD::write_immediate(const char *data) {
-    flush_buffer();
-
-    size_t length = strlen(data);
-
-    File f = SD.open(_filepath, FILE_APPEND);
-    if (!f)
-        return -1;
-    size_t written_length = 0;
-    written_length += f.write(reinterpret_cast<const uint8_t *>(data), strlen(data));
-    f.close();
-
-    return written_length;
-}
+int BufferedSD::write_immediate(const char *data) { return write_immediate(data, strlen(data)); }
 
 int BufferedSD::write_immediate(const char *data, size_t length) {
     flush_buffer();
