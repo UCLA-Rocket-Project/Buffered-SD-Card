@@ -73,12 +73,14 @@ class BufferedSD {
      * Used to support saving config based options on the SD card
      * You would usually want to check this stuff on startup
      */
-    int write_config(uint8_t tx_buf[], size_t config_length);
+    int update_config(uint8_t tx_buf[], size_t config_length);
 
     /**
      * reads a configuration into a buffer, returns length of configuration read
      */
     int read_config(uint8_t rx_buf[], size_t buf_len);
+
+    void clear_config_file();
 
   private:
     uint8_t *_write_buffer;

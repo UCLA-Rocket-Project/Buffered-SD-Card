@@ -208,7 +208,7 @@ unsigned long BufferedSD::get_free_space() {
     return (SD.totalBytes() - SD.usedBytes()) / (1024 * 1024);
 }
 
-int BufferedSD::write_config(uint8_t tx_buf[], size_t config_length) {
+int BufferedSD::update_config(uint8_t tx_buf[], size_t config_length) {
     File file_handle = {};
 
     if (!SD.exists(SD_CONFIG_FILEPATH)) {
@@ -248,4 +248,15 @@ int BufferedSD::read_config(uint8_t rx_buf[], size_t buf_len) {
 
     rx_buf[i] = '\0';
     return i;
+}
+
+void BufferedSD::clear_config_file() {
+    if (!SD.exists(SD_CONFIG_FILEPATH)) {
+        return;
+    } else {
+        SD.remove(SD_CONFIG_FILEPATH);
+    }
+
+    delay(10);
+    SD.open(SD_CONFIG_FILEPATH, FILE_WRITE);
 }
