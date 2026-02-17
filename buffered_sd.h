@@ -48,6 +48,7 @@ class BufferedSD {
     void get_file_name(char *buf);
 
     bool delete_all_files();
+    bool delete_all_files_with_exception(const char *exception);
     int count_top_level_files();
     bool create_new_file();
     unsigned long get_free_space();

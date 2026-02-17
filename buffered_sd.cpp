@@ -1,5 +1,6 @@
 #include <SD.h>
 #include <buffered_sd.h>
+#include <cstring>
 
 BufferedSD::BufferedSD(
     SPIClass &spi_bus, uint8_t CS, const char *base_filepath, const char *extension,
@@ -142,7 +143,9 @@ sd_card_update BufferedSD::get_file_update() {
 
 void BufferedSD::get_file_name(char *buf) { strncpy(buf, _filepath, strlen(_filepath) + 1); }
 
-bool BufferedSD::delete_all_files() {
+bool BufferedSD::delete_all_files() { return delete_all_files_with_exception(nullptr); }
+
+bool BufferedSD::delete_all_files_with_exception(const char *exception) {
     File root = SD.open("/");
     if (!root) {
         return false;
@@ -153,6 +156,11 @@ bool BufferedSD::delete_all_files() {
     while (file) {
         char name[FILEPATH_NAME_MAX_LENGTH];
         snprintf(name, FILEPATH_NAME_MAX_LENGTH, "/%s", file.name());
+
+        if (exception && strcmp(name, exception) == 0) {
+            continue;
+        }
+
         SD.remove(name);
 
         file = root.openNextFile();
