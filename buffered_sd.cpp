@@ -1,5 +1,6 @@
 #include <SD.h>
 #include <buffered_sd.h>
+#include <cstdio>
 #include <cstring>
 
 BufferedSD::BufferedSD(
@@ -208,7 +209,7 @@ unsigned long BufferedSD::get_free_space() {
     return (SD.totalBytes() - SD.usedBytes()) / (1024 * 1024);
 }
 
-int BufferedSD::update_config(uint8_t tx_buf[], size_t config_length) {
+int BufferedSD::update_config(const char tx_buf[], size_t config_length) {
     File file_handle = {};
 
     if (!SD.exists(SD_CONFIG_FILEPATH)) {
@@ -217,15 +218,16 @@ int BufferedSD::update_config(uint8_t tx_buf[], size_t config_length) {
         file_handle = SD.open(SD_CONFIG_FILEPATH, FILE_APPEND);
     }
 
-    if (!file_handle)
+    if (!file_handle) {
         return -1;
+    }
 
-    int wrote = file_handle.write(tx_buf, config_length);
+    int wrote = file_handle.write(reinterpret_cast<const uint8_t *>(tx_buf), config_length);
     file_handle.close();
     return wrote;
 }
 
-int BufferedSD::read_config(uint8_t rx_buf[], size_t buf_len) {
+int BufferedSD::read_config(char rx_buf[], size_t buf_len) {
     File file_handle = {};
 
     if (!SD.exists(SD_CONFIG_FILEPATH)) {

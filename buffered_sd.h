@@ -11,7 +11,7 @@
 #define FILEPATH_NAME_MAX_LENGTH 128
 #define NUM_TRIES_TO_OPEN        5
 #define SD_IDLE_TIMEOUT          5000UL
-#define SD_CONFIG_FILEPATH       "config.impt"
+#define SD_CONFIG_FILEPATH       "/config.impt"
 
 struct sd_card_update {
     uint32_t file_size;
@@ -73,12 +73,12 @@ class BufferedSD {
      * Used to support saving config based options on the SD card
      * You would usually want to check this stuff on startup
      */
-    int update_config(uint8_t tx_buf[], size_t config_length);
+    int update_config(const char tx_buf[], size_t config_length);
 
     /**
      * reads a configuration into a buffer, returns length of configuration read
      */
-    int read_config(uint8_t rx_buf[], size_t buf_len);
+    int read_config(char rx_buf[], size_t buf_len);
 
     void clear_config_file();
 
