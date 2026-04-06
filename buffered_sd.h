@@ -82,6 +82,8 @@ class BufferedSD {
 
     void clear_config_file();
 
+    int16_t get_current_file_num() { return _file_number; }
+
   private:
     uint8_t *_write_buffer;
     size_t _buffer_idx;
@@ -89,6 +91,7 @@ class BufferedSD {
     char _filepath[FILEPATH_NAME_MAX_LENGTH];
     const char *_base_path;
     const char *_extension;
+    int16_t _file_number;
 
     SPIClass *_spi;
     uint8_t _CS_pin;

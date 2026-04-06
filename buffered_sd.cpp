@@ -8,7 +8,7 @@ BufferedSD::BufferedSD(
     size_t buffer_size
 )
     : _spi(&spi_bus), _CS_pin(CS), _buffer_size(buffer_size), _base_path(base_filepath),
-      _extension(extension) {
+      _extension(extension), _file_number(-1) {
     // add the () behind to zero-initialize the buffer
     _write_buffer = new uint8_t[buffer_size]();
     configASSERT(_write_buffer && "Failed to initialize write buffer");
@@ -95,6 +95,7 @@ void BufferedSD::find_first_available_file(const char *planned_filepath, const c
 
             if (!SD.exists(temp_filepath)) {
                 strncpy(_filepath, temp_filepath, FILEPATH_NAME_MAX_LENGTH);
+                _file_number = i;
                 // null terminate the resulting string just in case
                 _filepath[FILEPATH_NAME_MAX_LENGTH - 1] = '\0';
                 return;
