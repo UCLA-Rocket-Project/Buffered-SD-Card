@@ -1,7 +1,10 @@
+#include "FS.h"
 #include <SD.h>
 #include <buffered_sd.h>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <sys/types.h>
 
 BufferedSD::BufferedSD(
     SPIClass &spi_bus, uint8_t CS, const char *base_filepath, const char *extension,
@@ -141,6 +144,95 @@ sd_card_update BufferedSD::get_file_update() {
     char *endptr;
 
     return {file_size, strtoul(number, &endptr, 10)};
+}
+
+sd_card_update BufferedSD::get_file_update_bin(
+    sd_card_header_footer_info hf_info[], uint8_t hf_into_count, uint8_t struct_buffer[]
+) {
+    File file = SD.open(_filepath, "r");
+    if (!file) {
+        return {0, 0};
+    }
+
+    uint32_t file_size = file.size();
+
+    // other odd behavior
+    // if the chunk size is anything but 1, I have to little endian it
+    //
+    // have not entirely figured out why a chunk size of < 4 does not work though
+    constexpr uint32_t backtrack_chunk_size = 512;
+
+    uint32_t offset = file_size;
+    uint8_t backtrack_buffer[backtrack_chunk_size]{};
+
+    // track the matching struct
+    int found_idx = -1;
+    // track the position within the buffer that the file was found at
+    int64_t header_found_position = -1;
+
+    // search for the file header
+    uint8_t candidate_header[sizeof(uint32_t)]{};
+    while (true) {
+        while (found_idx == -1 && offset != 0 && header_found_position == -1) {
+            uint32_t backtrack_amt = min(offset, backtrack_chunk_size);
+            offset -= backtrack_amt;
+            file.seek(offset, SeekSet);
+
+            for (uint32_t i = 0; i < backtrack_amt; i++) {
+                backtrack_buffer[i] = file.read();
+            }
+
+            // try to seek in the buffer for the header
+            int buffer_idx = 0;
+            for (int i = 0; i < backtrack_amt; i++) {
+                // we write to the back of the array, even though we are seeking forward
+                // in the file, because everything is in little endian
+                candidate_header[3] = backtrack_buffer[i];
+
+                uint32_t potential_header = 0;
+                memcpy(&potential_header, candidate_header, sizeof(uint32_t));
+
+                if (potential_header != 0) {
+                    for (int k = 0; k < hf_into_count; k++) {
+                        if (potential_header == hf_info[k].header) {
+                            // we subtract 3 here, since we are little-endianing the number
+                            // when we've found the correct number, we would be 3 past the
+                            // start of the struct
+                            header_found_position = offset + i - 3;
+                            found_idx = k;
+                            break;
+                        }
+                    }
+                }
+
+                // if not found, slide the window one byte back
+                // this byte is kept thorughout the parent while loop
+                if (found_idx != -1 && header_found_position != -1) {
+                    break;
+                }
+
+                candidate_header[0] = candidate_header[1];
+                candidate_header[1] = candidate_header[2];
+                candidate_header[2] = candidate_header[3];
+            }
+        }
+
+        if (found_idx == -1 || header_found_position == -1) {
+            return {0, 0};
+        }
+
+        file.seek(header_found_position, SeekSet);
+        for (int i = 0; i < hf_info[found_idx].struct_size; i++) {
+            struct_buffer[i] = file.read();
+        }
+
+        int64_t timestamp{};
+        memcpy(&timestamp, (struct_buffer + hf_info[found_idx].timestamp_offset), sizeof(int64_t));
+
+        // the timestamp is an int64_t but most of our code was previously written assuming it was
+        // uint32_t this is something that could definitely be improved in the future though
+        return {file_size, timestamp};
+    }
 }
 
 void BufferedSD::get_file_name(char *buf) { strncpy(buf, _filepath, strlen(_filepath) + 1); }

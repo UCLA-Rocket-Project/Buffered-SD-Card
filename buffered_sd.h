@@ -12,10 +12,17 @@
 #define NUM_TRIES_TO_OPEN        5
 #define SD_IDLE_TIMEOUT          5000UL
 #define SD_CONFIG_FILEPATH       "/config.impt"
+#define UPLINK_MAX_BUF_SIZE      1024
 
 struct sd_card_update {
     uint32_t file_size;
-    uint32_t last_written_timestamp;
+    int64_t last_written_timestamp;
+};
+
+struct sd_card_header_footer_info {
+    uint32_t header;
+    uint32_t struct_size;
+    uint32_t timestamp_offset;
 };
 
 class BufferedSD {
@@ -42,11 +49,23 @@ class BufferedSD {
     void print_contents();
 
     /**
-     * @brief: function specific to the debugging module on the esp32s
+     * @brief: function specific to the debugging module on the esp32s, assumes you are using
+     * newline characters to split lines
      *
      * @returns: file size + timestamp of last written log entry
      */
     sd_card_update get_file_update();
+
+    /**
+     * @brief: backtracks through the file to look for RP style headers / footers, which are all 4
+     * bytes. If it finds a header, read the next n bytes to collect the data If it finds a footer,
+     * backtrack by n bytes again to verify the header and read the data
+     *
+     * @returns: file size
+     */
+    sd_card_update get_file_update_bin(
+        sd_card_header_footer_info hf_info[], uint8_t hf_into_count, uint8_t struct_buffer[]
+    );
 
     void get_file_name(char *buf);
 
