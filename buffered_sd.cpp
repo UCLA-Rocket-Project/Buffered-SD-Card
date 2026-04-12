@@ -25,7 +25,7 @@ BufferedSD::~BufferedSD() {
 
 bool BufferedSD::begin() {
     for (int i = 0; i < NUM_TRIES_TO_OPEN; ++i) {
-        if (SD.begin(_CS_pin, *_spi)) {
+        if (SD.begin(_CS_pin, *_spi, 1200000)) {
             break;
         } else if (i == NUM_TRIES_TO_OPEN - 1) {
             return false;
