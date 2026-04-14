@@ -121,10 +121,21 @@ sd_card_update BufferedSD::get_file_update() {
     char curr = file.peek();
 
     // find the second last \n character
-    while (offset > 0 && curr != '\n') {
+    // this is only used by the radio boards, whose file sizes are not as important
+    // we add a hard cap to prevent them from erroring out when the file is empty
+    uint32_t seek_limit = file_size < 4096 ? file_size : 4096;
+    for (int i = 0; i < seek_limit; i++) {
+        if (curr == '\n') {
+            break;
+        }
+
         file.seek(offset, SeekSet);
         offset--;
         curr = file.peek();
+    }
+
+    if (curr != '\n') {
+        return {0, 0};
     }
 
     // biggest value is 4,294,967,295
