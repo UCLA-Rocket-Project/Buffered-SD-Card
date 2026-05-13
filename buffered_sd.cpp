@@ -123,7 +123,7 @@ sd_card_update BufferedSD::get_file_update() {
     // find the second last \n character
     // this is only used by the radio boards, whose file sizes are not as important
     // we add a hard cap to prevent them from erroring out when the file is empty
-    uint32_t seek_limit = file_size < 4096 ? file_size : 4096;
+    uint32_t seek_limit = file_size < 512 ? file_size : 512;
     for (int i = 0; i < seek_limit; i++) {
         if (curr == '\n') {
             break;
@@ -140,7 +140,7 @@ sd_card_update BufferedSD::get_file_update() {
 
     // biggest value is 4,294,967,295
     // go back and read the last timestamp present on the file
-    char number[11];
+    char number[64] = {0};
     int i = 0;
     while (file.available()) {
         number[i] = file.read();
@@ -150,10 +150,16 @@ sd_card_update BufferedSD::get_file_update() {
         i++;
     }
 
+    if (!file.available() || !(number[0] >= '0' && number[0] <= '9')) {
+        return {0, 0};
+    }
+
     number[i++] = '\0';
+    printf("%s\n", number);
 
     char *endptr;
 
+    printf("we are here");
     return {file_size, strtoul(number, &endptr, 10)};
 }
 
